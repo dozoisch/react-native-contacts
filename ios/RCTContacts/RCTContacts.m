@@ -172,23 +172,18 @@ withCallback:(RCTResponseSenderBlock) callback
       return @"";
     }
 
-    NSData* data = (__bridge_transfer NSData*)photoDataRef;
-    NSString* tempPath = [NSTemporaryDirectory()stringByStandardizingPath];
+    NSData* data = (__bridge NSData*)photoDataRef;
     NSError* err = nil;
-    NSString* tempfilePath = [NSString stringWithFormat:@"%@/thumbimage_XXXXX", tempPath];
-    char template[tempfilePath.length + 1];
-    strcpy(template, [tempfilePath cStringUsingEncoding:NSASCIIStringEncoding]);
-    mkstemp(template);
-    tempfilePath = [[NSFileManager defaultManager]
-    stringWithFileSystemRepresentation:template
-    length:strlen(template)];
-    
-    tempfilePath = [tempfilePath stringByAppendingString:@".png"];
-
-    [data writeToFile:tempfilePath options:NSAtomicWrite error:&err];
+    NSString* path = [
+      [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) objectAtIndex:0]
+      stringByStandardizingPath
+    ];
+    CFIndex photoId = ABRecordGetRecordID(person);
+    NSString* imgPath = [NSString stringWithFormat:@"%@/contact_picture_%ld.png", path, photoId];
+    [data writeToFile:imgPath options:NSDataWritingFileProtectionNone error:&err];
     CFRelease(photoDataRef);
-    if(!err){
-      return tempfilePath;
+    if (!err) {
+      return imgPath;
     }
   }
   return @"";
